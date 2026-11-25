@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stablyai/orca/main/docs/schemas/plugins/orca-plugin.v2.schema.json",
+  "manifestVersion": 2,
+  "execution": "trusted-worker",
+  "id": "claude-autoswitch",
+  "name": "Claude Auto-switch",
+  "version": "0.1.0",
+  "description": "Switches Orca to another Claude account you added in Orca when the active one nears its 5-hour or weekly limit. It never reads or stores tokens: Orca signs in and switches.",
+  "author": { "name": "ivanmunozruiz", "url": "https://github.com/ivanmunozruiz" },
+  "repository": "https://github.com/ivanmunozruiz/orca-claude-autoswitch",
+  "engines": { "orca": ">=1.4.248" },
+  "pluginApi": 1,
+  "main": "main.mjs",
+  "capabilities": [
+    { "kind": "notifications:show" },
+    { "kind": "settings:own" }
+  ],
+  "contributes": {
+    "commands": [
+      { "id": "check", "title": "Claude Auto-switch: Check now" }
+    ],
+    "statusBarItems": [
+      { "id": "usage", "text": "Claude …", "icon": "gauge", "tooltip": "Claude Auto-switch", "command": "check" }
+    ],
+    "settings": [
+      {
+        "key": "threshold",
+        "title": "Switch at (% used)",
+        "description": "Switch when the active account has used this share of its 5-hour or weekly window, and another account is under it.",
+        "type": "integer",
+        "default": 90,
+        "minimum": 50,
+        "maximum": 100
+      }
+    ]
+  }
+}
