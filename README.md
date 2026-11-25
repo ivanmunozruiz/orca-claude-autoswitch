@@ -6,7 +6,7 @@ It never sees a token. Orca already keeps your accounts, reads their usage and s
 
 ## Requirements
 
-- Orca 1.4.248 or later, with plugins turned on (Settings › Plugins). Tested on Orca 1.4.274 on macOS.
+- Orca 1.4.248 or later, with plugins turned on (Settings › Plugins). Written against Orca 1.4.274 on macOS and unit-tested with Orca's mock host; a switch inside a running Orca has not been exercised yet.
 - At least two Claude accounts in Orca. Your normal `claude` login is the `system` account; add the others with `orca account add` (or Settings › AI Provider Accounts). Two seats of the same email in different organizations count as two accounts: pick the other organization when you sign in.
 - Orca's **Claude usage polling** on, in the same settings page. That is how Orca reads the accounts you are not using; with it off there is nothing to compare, and the plugin never switches.
 
@@ -51,7 +51,7 @@ Only the 5-hour and weekly windows count, not per-model limits. Only accounts on
 
 ## Limits
 
-- The figures are Orca's. Orca refreshes them on its own schedule, which in testing was every one to two minutes while Orca was in use, so the plugin reacts within a few minutes, not to the second.
+- The figures are Orca's, and Orca refreshes them on its own schedule: every one to two minutes in a test with Orca's window in front. Orca polls less while it is in the background, so readings can lag until you come back to it. The plugin reacts within minutes, not to the second.
 - It does not stop a session that crosses the limit mid-run: that session keeps its account unless Orca restarts it (see [Running sessions](#running-sessions)).
 
 ## Development
