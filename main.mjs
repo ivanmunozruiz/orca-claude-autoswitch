@@ -7,6 +7,8 @@ import { decide } from './decide.mjs'
 const POLL_MS = 60_000
 // After a switch Orca needs a moment to read the new account; never switch twice in a row.
 const COOLDOWN_MS = 10 * 60_000
+// Extra usage that keeps rising is one episode: tell once, and again only after this long without a rise.
+const SPEND_QUIET_MS = 30 * 60_000
 const STATUS_ID = 'usage'
 
 // The Orca CLI that ships with the running app (macOS), then the usual install spots, then PATH.
@@ -47,9 +49,27 @@ export default function activate(orca) {
   let inflight = null
   let lastSwitchAt = -Infinity
   let warnedExhausted = false
+  const spentBefore = new Map()
+  const lastRiseAt = new Map()
 
   const notify = (title, body) => orca.host.call('notifications.show', { title, body })
   const status = (fields) => orca.host.call('statusBar.update', { id: STATUS_ID, ...fields })
+
+  // Extra usage only moves while an account is past its limits, on whichever account a session runs:
+  // a rise since the last reading means money is being spent now. The first reading only sets the baseline.
+  async function watchSpending(d, now) {
+    for (const account of [d.active, ...d.others]) {
+      if (!account.extra) continue
+      const before = spentBefore.get(account.id)
+      spentBefore.set(account.id, account.extra.spent)
+      if (before === undefined || account.extra.spent <= before) continue
+      const lastRise = lastRiseAt.get(account.id) ?? -Infinity
+      lastRiseAt.set(account.id, now)
+      if (now - lastRise >= SPEND_QUIET_MS) {
+        await notify(`${account.label} is spending extra usage`, `${extraText(account.extra)} this month. It is past its 5-hour or weekly limit.`)
+      }
+    }
+  }
 
   async function run() {
     const threshold = Number(await orca.settings.get('threshold')) || 90
@@ -63,6 +83,8 @@ export default function activate(orca) {
       await status({ text: 'Claude ?', tone: 'danger', tooltip: `Claude Auto-switch could not read Orca's accounts: ${error.message}` })
       return `Could not read Orca's accounts: ${error.message}`
     }
+
+    await watchSpending(d, now)
 
     if (d.action === 'switch' && now - lastSwitchAt >= COOLDOWN_MS) {
       try {
@@ -82,7 +104,10 @@ export default function activate(orca) {
 
     if (d.action === 'exhausted' && !warnedExhausted) {
       warnedExhausted = true
-      await notify('Every Claude account is near its limit', `${d.active.label} is at ${d.active.used}% and no other account in Orca is under ${threshold}%.`)
+      const next = d.active.extra
+        ? `Past the limit it spends extra usage: ${extraText(d.active.extra)} so far this month.`
+        : 'It has no extra usage, so Claude stops at the limit until the window resets.'
+      await notify('Every Claude account is near its limit', `${d.active.label} is at ${d.active.used}% and no other account in Orca is under ${threshold}%. ${next}`)
     }
     if (d.action === 'stay') warnedExhausted = false
 
@@ -113,8 +138,25 @@ function percent(used) {
   return used === null ? 'no reading' : `${used}%`
 }
 
+function money(amount, currency) {
+  if (!currency) return String(Math.round(amount))
+  try {
+    return new Intl.NumberFormat('en', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
+  } catch {
+    return `${Math.round(amount)} ${currency}`
+  }
+}
+
+function extraText(extra) {
+  const spent = money(extra.spent, extra.currency)
+  return extra.limit === null ? `${spent} spent` : `${spent} of ${money(extra.limit, extra.currency)} spent`
+}
+
 function tooltip(d, activeId = d.active.id) {
-  const rows = [d.active, ...d.others].map((a) => `${a.label}: ${percent(a.used)}${a.id === activeId ? ' (active)' : ''}`)
+  const rows = [d.active, ...d.others].map((a) => {
+    const extra = a.extra ? ` · extra ${extraText(a.extra)}` : ''
+    return `${a.label}: ${percent(a.used)}${extra}${a.id === activeId ? ' (active)' : ''}`
+  })
   return [`Switches at ${d.threshold}% of the 5-hour or weekly window.`, ...rows].join('\n')
 }
 

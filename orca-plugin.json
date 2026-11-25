@@ -4,7 +4,7 @@
   "execution": "trusted-worker",
   "id": "claude-autoswitch",
   "name": "Claude Auto-switch",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Switches Orca to another Claude account you added in Orca when the active one nears its 5-hour or weekly limit. It never reads or stores tokens: Orca signs in and switches.",
   "author": { "name": "ivanmunozruiz", "url": "https://github.com/ivanmunozruiz" },
   "repository": "https://github.com/ivanmunozruiz/orca-claude-autoswitch",

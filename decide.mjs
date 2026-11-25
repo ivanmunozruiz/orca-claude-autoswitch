@@ -18,6 +18,17 @@ export function peakPercent(limits, now) {
   return peak
 }
 
+// The extra usage an account can spend past its limits, or null: many plans have none, or have it off.
+export function extraOf(limits) {
+  const extra = limits?.status === 'ok' ? limits.extraUsage : null
+  if (!extra || extra.enabled !== true || typeof extra.spent !== 'number') return null
+  return {
+    spent: extra.spent,
+    limit: typeof extra.spendLimit === 'number' ? extra.spendLimit : null,
+    currency: extra.currencyCode || null,
+  }
+}
+
 export function activeAccountId(claude) {
   return claude?.activeAccountIdsByRuntime?.host ?? claude?.activeAccountId ?? 'system'
 }
@@ -42,7 +53,8 @@ export function decide(result, { threshold, now, systemLabel }) {
   // Right after a switch Orca can still hold the previous account's reading: only trust one it
   // took with the active account's credentials, or the plugin would bounce straight back.
   const expected = activeId === 'system' ? 'system' : `profile:${activeId}`
-  const activeUsed = reading?.usageMetadata?.authProvenance === expected ? peakPercent(reading, now) : null
+  const trusted = reading?.usageMetadata?.authProvenance === expected
+  const activeUsed = trusted ? peakPercent(reading, now) : null
 
   const others = (limits?.inactiveClaudeAccounts ?? [])
     .map((entry) => (entry.accountId === SYSTEM_INACTIVE_ID ? { ...entry, accountId: 'system' } : entry))
@@ -51,9 +63,11 @@ export function decide(result, { threshold, now, systemLabel }) {
       id: entry.accountId,
       label: labelOf(claude, entry.accountId, systemLabel),
       used: peakPercent(entry.rateLimits, now),
+      extra: extraOf(entry.rateLimits),
     }))
 
-  const base = { threshold, active: { id: activeId, label: labelOf(claude, activeId, systemLabel), used: activeUsed }, others }
+  const active = { id: activeId, label: labelOf(claude, activeId, systemLabel), used: activeUsed, extra: trusted ? extraOf(reading) : null }
+  const base = { threshold, active, others }
   if (activeUsed === null) return { ...base, action: 'wait' }
   if (activeUsed < threshold) return { ...base, action: 'stay' }
   const to = others

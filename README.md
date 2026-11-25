@@ -20,8 +20,13 @@ Orca does not install it yet. Because the plugin runs code, the command stops wi
 
 ## What you see
 
-- **Status bar:** the active account and the highest share it has used of its 5-hour or weekly window, for example `Org A 81%`. It turns amber 15 points before the threshold and red at it. Hover for every account; press it to check now.
-- **Notifications:** one when it switches, and one when every account is over the threshold, which is when you start spending extra usage or hit the limit.
+- **Status bar:** the active account and the highest share it has used of its 5-hour or weekly window, for example `Org A 81%`. It turns amber 15 points before the threshold and red at it. Hover for every account, with its extra usage when it has any; press it to check now.
+- **Notifications:**
+  - when it switches;
+  - when every account is over the threshold. It says what happens next: an account with extra usage starts spending it, with the amount spent this month; one without it stops at the limit until the window resets;
+  - when an account's extra usage goes up, which means a session on it is past its limit and spending now. One notice per episode: another only after 30 minutes without a rise.
+
+Extra usage is optional and many plans do not have it. An account without it, or with it turned off, never gets a spending notice.
 - **Command:** `Claude Auto-switch: Check now`.
 
 ## Settings
