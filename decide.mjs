@@ -22,8 +22,8 @@ export function activeAccountId(claude) {
   return claude?.activeAccountIdsByRuntime?.host ?? claude?.activeAccountId ?? 'system'
 }
 
-function labelOf(claude, id) {
-  if (id === 'system') return 'System default'
+function labelOf(claude, id, systemLabel) {
+  if (id === 'system') return systemLabel || 'System default'
   const account = claude?.accounts?.find((a) => a.id === id)
   return account?.displayName || account?.organizationName || account?.email || id
 }
@@ -34,7 +34,7 @@ function isWsl(claude, id) {
 
 // action: 'stay' (under the threshold), 'switch' (to `to`), 'exhausted' (no other account has
 // room) or 'wait' (Orca has no reading of the active account yet).
-export function decide(result, { threshold, now }) {
+export function decide(result, { threshold, now, systemLabel }) {
   const claude = result?.claude
   const limits = result?.rateLimits
   const activeId = activeAccountId(claude)
@@ -49,11 +49,11 @@ export function decide(result, { threshold, now }) {
     .filter((entry) => entry.accountId !== activeId && !isWsl(claude, entry.accountId))
     .map((entry) => ({
       id: entry.accountId,
-      label: labelOf(claude, entry.accountId),
+      label: labelOf(claude, entry.accountId, systemLabel),
       used: peakPercent(entry.rateLimits, now),
     }))
 
-  const base = { threshold, active: { id: activeId, label: labelOf(claude, activeId), used: activeUsed }, others }
+  const base = { threshold, active: { id: activeId, label: labelOf(claude, activeId, systemLabel), used: activeUsed }, others }
   if (activeUsed === null) return { ...base, action: 'wait' }
   if (activeUsed < threshold) return { ...base, action: 'stay' }
   const to = others

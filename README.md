@@ -6,7 +6,7 @@ It never sees a token. Orca already keeps your accounts, reads their usage and s
 
 ## Requirements
 
-- Orca 1.4.248 or later, with plugins turned on (Settings › Plugins). Written against Orca 1.4.274 on macOS and unit-tested with Orca's mock host; a switch inside a running Orca has not been exercised yet.
+- Orca 1.4.248 or later, with plugins turned on (Settings › Plugins). Tested on Orca 1.4.274 on macOS, including a real automatic switch between two seats of the same email in different organizations. Not tried on Linux or Windows.
 - At least two Claude accounts in Orca. Your normal `claude` login is the `system` account; add the others with `orca account add` (or Settings › AI Provider Accounts). Two seats of the same email in different organizations count as two accounts: pick the other organization when you sign in.
 - Orca's **Claude usage polling** on, in the same settings page. That is how Orca reads the accounts you are not using; with it off there is nothing to compare, and the plugin never switches.
 
@@ -29,6 +29,7 @@ Orca does not install it yet. Because the plugin runs code, the command stops wi
 | Setting | Default | What it does |
 |---|---|---|
 | Switch at (% used) | 90 | Switch when the active account has used this share of its 5-hour or weekly window and another account is under it. |
+| Name of your default account | empty | The name shown for your normal `claude` login, which otherwise reads "System default": Orca does not report that account's organization. |
 
 ## Running sessions
 
@@ -62,3 +63,7 @@ orca plugin validate . --json
 ```
 
 The decision logic is in `decide.mjs`, with no I/O. The worker, `main.mjs`, polls, calls the Orca CLI and updates the status bar.
+
+## License
+
+[MIT](LICENSE)

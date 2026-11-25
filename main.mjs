@@ -53,10 +53,11 @@ export default function activate(orca) {
 
   async function run() {
     const threshold = Number(await orca.settings.get('threshold')) || 90
+    const systemLabel = String((await orca.settings.get('systemLabel')) ?? '').trim()
     const now = io.now()
     let d
     try {
-      d = decide(await io.listAccounts(), { threshold, now })
+      d = decide(await io.listAccounts(), { threshold, now, systemLabel })
     } catch (error) {
       orca.log(`could not read Orca accounts: ${error.message}`)
       await status({ text: 'Claude ?', tone: 'danger', tooltip: `Claude Auto-switch could not read Orca's accounts: ${error.message}` })

@@ -55,6 +55,8 @@ test('the parked system login is selected as `system`', () => {
   const d = decide(listResult({ active: 'acct-b', activeUsed: 95 }), opts)
   assert.equal(d.active.label, 'Org B')
   assert.equal(d.to.id, 'system')
+  assert.equal(d.to.label, 'System default')
+  assert.equal(decide(listResult({ active: 'acct-b', activeUsed: 95 }), { ...opts, systemLabel: 'Org A' }).to.label, 'Org A')
 })
 
 test('a window past its reset counts as empty', () => {

@@ -4,10 +4,11 @@
   "execution": "trusted-worker",
   "id": "claude-autoswitch",
   "name": "Claude Auto-switch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Switches Orca to another Claude account you added in Orca when the active one nears its 5-hour or weekly limit. It never reads or stores tokens: Orca signs in and switches.",
   "author": { "name": "ivanmunozruiz", "url": "https://github.com/ivanmunozruiz" },
   "repository": "https://github.com/ivanmunozruiz/orca-claude-autoswitch",
+  "license": "MIT",
   "engines": { "orca": ">=1.4.248" },
   "pluginApi": 1,
   "main": "main.mjs",
@@ -31,6 +32,15 @@
         "default": 90,
         "minimum": 50,
         "maximum": 100
+      },
+      {
+        "key": "systemLabel",
+        "title": "Name of your default account",
+        "description": "Shown instead of \"System default\" for the account you signed in to with `claude` itself. Orca does not report that account's organization.",
+        "type": "string",
+        "default": "",
+        "maxLength": 40,
+        "placeholder": "System default"
       }
     ]
   }
